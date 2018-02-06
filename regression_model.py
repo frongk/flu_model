@@ -12,9 +12,9 @@ import pdb
 
 def loaddata():
     # loads cdc data and joins old and new data sets based upon common fields
-    t2015_clinic = pd.read_csv('WHO_NREVSS_Clinical_Labs.csv', header=1)
-    t2015_phlabs = pd.read_csv('WHO_NREVSS_Public_Health_Labs.csv', header=1)
-    t_pre2015 = pd.read_csv('WHO_NREVSS_Combined_prior_to_2015_16.csv', header=1)
+    t2015_clinic = pd.read_csv('data/WHO_NREVSS_Clinical_Labs.csv', header=1)
+    t2015_phlabs = pd.read_csv('data/WHO_NREVSS_Public_Health_Labs.csv', header=1)
+    t_pre2015 = pd.read_csv('data/WHO_NREVSS_Combined_prior_to_2015_16.csv', header=1)
     
     acols_pre  = [
                   'A (2009 H1N1)', 
@@ -86,7 +86,7 @@ def target_gen(dataf, col_name, forward_window=1):
     target.name = 'target'
     return pd.concat([dataf, target], axis=1)
     
-def updown_eval(df, y_test_pred, test_idx, target_col_name):
+def updown_eval_bin(df, y_test_pred, test_idx, target_col_name):
     # evaluates if model accurately predicts up or down trend in flu activity
 
     # pdb.set_trace()
@@ -154,17 +154,43 @@ if __name__=="__main__":
     print 'this weeks projected flu activity: %s' % (this_week_percent)
 
     all_pred = model.predict(selector.transform(X))
-    ud_acc = updown_eval(df, y_pred, y_test.index, target_col_name)
+    ud_acc = updown_eval_bin(df, y_pred, y_test.index, target_col_name)
     print "accuracy of increasing or decreasing: %s " % (ud_acc)
     
     # plot results
+    plt.figure(figsize=(7,7))
     plt.scatter(y_test, y_pred)
     plt.plot(y_test, y_test)
+    plt.xlabel('Actual Value')
+    plt.ylabel('Predicted Value')
+    plt.tight_layout()
+    plt.savefig('img/flu_parity_plot.png')
     plt.show()
 
+    plt.figure(figsize=(7,7))
     plt.hist((y_test-y_pred), bins=40)
+    plt.xlabel('Prediction Error')
+    plt.ylabel('Count')
+    plt.tight_layout()
+    plt.savefig('img/flu_error_plot.png')
     plt.show()
 
-    plt.plot(range(X.shape[0]), all_pred)
-    plt.plot(range(X.shape[0]), y)
+    start_plt=700
+    plt.figure(figsize=(7,7))
+    plt.plot(range(X.shape[0])[start_plt:], all_pred[start_plt:])
+    plt.plot(range(X.shape[0])[start_plt:], y[start_plt:])
+    plt.xlabel('Week Number (0 is First Week in Dataset)')
+    plt.ylabel('PERCENT POSITIVE')
+    plt.tight_layout()
+    plt.savefig('img/flu_trend_plot_01.png')
+    plt.show()
+
+    start_plt=960
+    plt.figure(figsize=(7,7))
+    plt.plot(range(X.shape[0])[start_plt:], all_pred[start_plt:])
+    plt.plot(range(X.shape[0])[start_plt:], y[start_plt:])
+    plt.xlabel('Week Number (0 is First Week in Dataset)')
+    plt.ylabel('PERCENT POSITIVE')
+    plt.tight_layout()
+    plt.savefig('img/flu_trend_plot_02.png')
     plt.show()
